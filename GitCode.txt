@@ -1,0 +1,83 @@
+def det(a):
+    return (a[0][0]*a[1][1]*a[2][2] + a[0][1]*a[1][2]*a[2][0] + a[0][2]*a[1][0]*a[2][1] - a[0][2]*a[1][1]*a[2][0] - a[0][1]*a[1][0]*a[2][2] - a[0][0]*a[1][2]*a[2][1])
+
+def dot(a, b):
+    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
+
+def cross(a, b):
+    x = a[1] * b[2] - a[2] * b[1]
+    y = a[2] * b[0] - a[0] * b[2]
+    z = a[0] * b[1] - a[1] * b[0]
+    return (x, y, z)
+
+def unit_normal(a, b, c):
+    x = det([[1,a[1],a[2]],
+             [1,b[1],b[2]],
+             [1,c[1],c[2]]])
+    y = det([[a[0],1,a[2]],
+             [b[0],1,b[2]],
+             [c[0],1,c[2]]])
+    z = det([[a[0],a[1],1],
+             [b[0],b[1],1],
+             [c[0],c[1],1]])
+    magnitude = (x**2 + y**2 + z**2)**.5
+    return (x/magnitude, y/magnitude, z/magnitude)
+
+def AFace(a):
+  if len(a) < 3:
+        return 0
+  total=[0,0,0]
+  for i in range(len(a)):
+    vi1 = a[i]
+    if i is len(a)-1:
+        vi2 = a[0]
+    else:
+        vi2 = a[i+1]
+    prod = cross(vi1, vi2)
+    total[0] += prod[0]
+    total[1] += prod[1]
+    total[2] += prod[2]
+  return dot(total,unit_normal(a[0],a[1],a[2]))/2
+
+def HFace(a):
+  return abs(dot(a[0],unit_normal(a[0],a[1],a[2])))
+
+
+def MFace(a):
+  if len(a) < 3:
+         return 0
+  n=unit_normal(a[0],a[1],a[2])
+  total=[0,0,0]
+  for i in range(len(a)):
+    vi1 = a[i]
+    if i is len(a)-1:
+        vi2 = a[0]
+    else:
+        vi2 = a[i+1]
+    vi0 = [dot(vi2,n)*n[0],dot(vi2,n)*n[1],dot(vi2,n)*n[2]]
+    prod1 = cross(vi1,vi2)
+    prod2 = vi0[0]**2 + vi1[0]**2 + vi2[0]**2 + vi0[1]**2 + vi1[1]**2 + vi2[1]**2 + (vi0[0] * vi1[0]) + (vi0[0] * vi2[0]) + (vi1[0] * vi2[0]) + (vi0[1] * vi1[1]) + (vi0[1] * vi2[1]) + (vi1[1] * vi2[1])
+    total[0] += prod1[0]*prod2
+    total[1] += prod1[1]*prod2
+    total[2] += prod1[2]*prod2
+  return dot(total,n)/12
+    
+def Volume(*args):
+  total=0
+  for F in args:
+    total += AFace(F)*HFace(F)
+  return total/3
+    
+def MSolid(*args):
+  total=0
+  for F in args:
+    total += MFace(F)*HFace(F)
+  return total/(5*Volume(*args))
+
+def MHollow(*args):
+  totalM=0
+  totalA=0
+  for F in args:
+    totalM += MFace(F)
+    totalA += AFace(F)
+  return totalM/totalA
